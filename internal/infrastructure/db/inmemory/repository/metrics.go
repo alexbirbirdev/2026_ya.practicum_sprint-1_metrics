@@ -34,7 +34,7 @@ func (r *MetricsRepository) FindMetric(metric entity.Metric) (entity.Metric, err
 	}
 	db := r.db.Metrics
 	slog.Info("DB:", db)
-	return response, errors.NotFound
+	return response, errors.ErrNotFound
 }
 func (r *MetricsRepository) CreateMetric(metric entity.Metric) error {
 	newMetric := models.MapToModel(&metric)

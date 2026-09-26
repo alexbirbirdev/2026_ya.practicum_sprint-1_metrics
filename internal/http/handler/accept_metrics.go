@@ -5,6 +5,7 @@ import (
 
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/dto"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase"
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
 )
 
 type MetricHandlers struct {
@@ -32,6 +33,13 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 
 	request, err := dto.NewUpdateMetricRequest(req.URL.Path)
 	if err != nil {
+		if err == errors.ErrHTTPStatusNotFound {
+			http.Error(res, "Wrong Request", http.StatusNotFound)
+			return
+		} else if err == errors.ErrHTTPStatusBadRequest {
+			http.Error(res, "Bad Request", http.StatusBadRequest)
+			return
+		}
 		http.Error(res, "Validation Error", http.StatusBadRequest)
 		return
 	}

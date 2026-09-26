@@ -26,7 +26,7 @@ func (u *MetricUsecases) IncrementCounter(in dto.UpdateMetricsRequest) error {
 	}
 	existMetric, err := u.repo.FindMetric(*metric)
 	if err != nil {
-		if err == errors.NotFound {
+		if err == errors.ErrNotFound {
 			err = u.repo.CreateMetric(*metric)
 			if err != nil {
 				return err
@@ -53,7 +53,7 @@ func (u *MetricUsecases) UpdateGauge(in dto.UpdateMetricsRequest) error {
 	}
 	existMetric, err := u.repo.FindMetric(*metric)
 	if err != nil {
-		if err == errors.NotFound {
+		if err == errors.ErrNotFound {
 			err = u.repo.CreateMetric(*metric)
 			if err != nil {
 				return err

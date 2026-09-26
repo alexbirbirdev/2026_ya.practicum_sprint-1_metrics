@@ -3,5 +3,7 @@ package errors
 import "errors"
 
 var (
-	NotFound = errors.New("Not found")
+	ErrNotFound             = errors.New("not found")
+	ErrHTTPStatusBadRequest = errors.New("bad request")
+	ErrHTTPStatusNotFound   = errors.New("not found")
 )
