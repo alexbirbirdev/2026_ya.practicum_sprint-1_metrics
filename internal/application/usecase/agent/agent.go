@@ -38,12 +38,12 @@ func (u *AgentUsecase) SendMetrics(keys db.MetricsKeys, values db.MetricsValues,
 	for {
 		for _, m := range keys.CounterMetricsKeys {
 			if err := sendMetric(vo.Counter, m, values.CounterMetricsValues[m]); err != nil {
-				panic(err)
+				break
 			}
 		}
 		for _, m := range keys.GaugeMetricsKeys {
 			if err := sendMetric(vo.Gauge, m, values.GaugeMetricsValues[m]); err != nil {
-				panic(err)
+				break
 			}
 		}
 		time.Sleep(interval)
