@@ -50,15 +50,19 @@ func (u *AgentUsecase) SendMetrics(keys db.MetricsKeys, values db.MetricsValues,
 	}
 }
 
+var client = &http.Client{
+	Timeout: 1 * time.Second,
+}
+
 func sendMetric(metricType, metricName string, metricValue any) error {
 
 	url := fmt.Sprintf("http://localhost:8080/update/%s/%s/%v", metricType, metricName, metricValue)
-	response, err := http.Post(url, "text/plain", nil)
+	response, err := client.Post(url, "text/plain", nil)
 	if err != nil {
 		return err
 	}
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("Status code is not 200")
+		return fmt.Errorf("status code is not 200")
 	}
 	response.Body.Close()
 	return nil
