@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"log/slog"
-
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/interfaces"
 	vo "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object"
@@ -32,15 +30,11 @@ func (r *MetricsRepository) FindMetric(metric entity.Metric) (entity.Metric, err
 			return response, nil
 		}
 	}
-	db := r.db.Metrics
-	slog.Info("DB:", db)
 	return response, errors.ErrNotFound
 }
 func (r *MetricsRepository) CreateMetric(metric entity.Metric) error {
 	newMetric := models.MapToModel(&metric)
 	r.db.Metrics = append(r.db.Metrics, *newMetric)
-	db := r.db.Metrics
-	slog.Info("DB:", db)
 	return nil
 }
 func (r *MetricsRepository) UpdateMetric(metric entity.Metric) error {
