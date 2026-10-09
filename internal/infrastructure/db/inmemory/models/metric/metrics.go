@@ -1,6 +1,8 @@
 package models
 
-import "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"
+import (
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"
+)
 
 type InMemoryMetrics struct {
 	Metrics []Metric
@@ -21,36 +23,21 @@ func NewInMemoryMetrics() (*InMemoryMetrics, error) {
 }
 
 func (m *Metric) MapToEntity() *entity.Metric {
-	var delta int
-	if m.Delta != nil {
-		delta = int(*m.Delta)
-	}
-	var value float64
-	if m.Value != nil {
-		value = *m.Value
-	}
-	return &entity.Metric{
+	metric := &entity.Metric{
 		Name:         m.ID,
 		Type:         m.MType,
-		CounterValue: &delta,
-		GaugeValue:   &value,
+		CounterValue: m.Delta,
+		GaugeValue:   m.Value,
 	}
+	return metric
 }
 
 func MapToModel(m *entity.Metric) *Metric {
-	var delta int64
-	if m.CounterValue != nil {
-		delta = int64(*m.CounterValue)
-	}
-	var value float64
-	if m.GaugeValue != nil {
-		value = *m.GaugeValue
-	}
 	return &Metric{
 		ID:    m.Name,
 		MType: m.Type,
-		Delta: &delta,
-		Value: &value,
+		Delta: m.CounterValue,
+		Value: m.GaugeValue,
 		Hash:  "default",
 	}
 }

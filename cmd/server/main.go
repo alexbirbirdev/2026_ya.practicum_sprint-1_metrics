@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase"
-	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler"
-	models "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/inmemory/models"
+	http "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
+
+	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
+	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	models "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/inmemory/models/metric"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/inmemory/repository"
 )
 
@@ -18,14 +19,15 @@ func main() {
 
 	metricsRepository := repository.NewMetricsRepository(inMemoryDB)
 
-	metricsUsecase := usecase.NewMetricUsecases(metricsRepository)
+	metricsUsecases := usecase.NewMetricUsecases(metricsRepository)
 
-	metricsHandler := handler.NewMetricHandler(*metricsUsecase)
+	metricsHandlers := metricHandlers.NewMetricHandler(*metricsUsecases)
 
-	http.HandleFunc(`/update/`, metricsHandler.AcceptMetric)
-
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
-		panic(err)
+	handlers := http.HTTPHandlers{
+		Metrics: metricsHandlers,
 	}
+
+	router := http.NewHTTPRouter(handlers)
+
+	http.NewHTTPServer(router)
 }
