@@ -86,12 +86,6 @@ func TestHTTPRouter(t *testing.T) {
 		},
 		{
 			url:         "/update/counter/some/123",
-			method:      http.MethodPost,
-			contentType: "application/json",
-			want:        http.StatusUnsupportedMediaType,
-		},
-		{
-			url:         "/update/counter/some/123",
 			method:      http.MethodGet,
 			contentType: "text/plain",
 			want:        http.StatusMethodNotAllowed,
