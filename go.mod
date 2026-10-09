@@ -1,6 +1,6 @@
 module github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics
 
-go 1.27.0
+go 1.26.0
 
 require (
 	github.com/go-chi/chi/v5 v5.3.2
