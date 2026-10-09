@@ -11,7 +11,7 @@ import (
 
 type Handler struct {
 	client  resty.Client
-	baseUrl string
+	baseURL string
 }
 
 func NewHandler(baseURL string) *Handler {
@@ -20,12 +20,12 @@ func NewHandler(baseURL string) *Handler {
 			SetRetryCount(3).
 			SetRetryWaitTime(3 * time.Second).
 			SetRetryMaxWaitTime(3 * time.Second),
-		baseUrl: baseURL,
+		baseURL: baseURL,
 	}
 }
 
 func (h Handler) SendMetric(in dto.MetricDTO) (int, error) {
-	url := fmt.Sprintf("%s/update/%s/%s/%v", h.baseUrl, in.Type, in.Name, in.Value())
+	url := fmt.Sprintf("%s/update/%s/%s/%v", h.baseURL, in.Type, in.Name, in.Value())
 	resp, err := h.client.R().
 		SetHeader("Content-Type", "text/plain").
 		Post(url)

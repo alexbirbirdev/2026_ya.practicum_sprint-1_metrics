@@ -14,12 +14,12 @@ type MetricDTO struct {
 	GaugeValue   *float64 `json:"gauge_value,omitempty"`
 }
 
-func (m MetricDTO) Value() any {
-	if m.CounterValue != nil {
-		return *m.CounterValue
+func (dto MetricDTO) Value() any {
+	if dto.CounterValue != nil {
+		return *dto.CounterValue
 	}
-	if m.GaugeValue != nil {
-		return *m.GaugeValue
+	if dto.GaugeValue != nil {
+		return *dto.GaugeValue
 	}
 	return "-"
 }
