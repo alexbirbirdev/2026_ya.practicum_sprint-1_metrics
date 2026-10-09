@@ -24,10 +24,6 @@ func NewMetricHandler(
 }
 
 func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request) {
-	if req.Header.Get("Content-Type") != "text/plain" {
-		http.Error(res, "wrong content-Type", http.StatusUnsupportedMediaType)
-		return
-	}
 	metricType := chi.URLParam(req, "metricType")
 	if !vo.MetricType(metricType).Validate() {
 		http.Error(res, "wrong metric type", http.StatusBadRequest)
