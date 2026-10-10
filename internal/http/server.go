@@ -4,6 +4,6 @@ import (
 	"net/http"
 )
 
-func NewHTTPServer(r *HTTPRouter) {
-	http.ListenAndServe(":8080", r.Chi)
+func NewHTTPServer(addr string, r *HTTPRouter) {
+	http.ListenAndServe(addr, r.Chi)
 }

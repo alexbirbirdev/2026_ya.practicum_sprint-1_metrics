@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	http "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
@@ -12,6 +13,10 @@ import (
 )
 
 func main() {
+
+	addr := flag.String("a", "localhost:8080", "адрес эндопинта HTTP сервера")
+	flag.Parse()
+
 	inMemoryDB, err := models.NewInMemoryMetrics()
 	if err != nil {
 		panic(fmt.Errorf("fail to initialize DB"))
@@ -29,5 +34,5 @@ func main() {
 
 	router := http.NewHTTPRouter(handlers)
 
-	http.NewHTTPServer(router)
+	http.NewHTTPServer(*addr, router)
 }

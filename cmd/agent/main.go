@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/agent"
@@ -9,13 +10,18 @@ import (
 )
 
 func main() {
-	pollInterval := 2 * time.Second
-	reportInterval := 10 * time.Second
+	addr := flag.String("a", "localhost:8080", "адрес эндопинта HTTP сервера")
+	reportSec := flag.Int("r", 10, "частота отправки метрик на сервер")
+	pollSec := flag.Int("p", 2, "частота опроса метрик")
+	flag.Parse()
+
+	pollInterval := time.Duration(*pollSec) * time.Second
+	reportInterval := time.Duration(*reportSec) * time.Second
 
 	metricKeys := db.NewMetricKeys()
 	metricValues := db.NewMetricsValues()
 
-	baseURL := "http://localhost:8080"
+	baseURL := "http://" + *addr
 	handler := handler.NewHandler(baseURL)
 
 	usecases := usecase.NewAgentUsecase(*handler)
