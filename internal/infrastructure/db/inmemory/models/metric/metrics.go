@@ -41,5 +41,3 @@ func MapToModel(m *entity.Metric) *Metric {
 		Hash:  "default",
 	}
 }
-
-// из описания задания мне не было понятно, для чего хеш, но пока оставил на будущее

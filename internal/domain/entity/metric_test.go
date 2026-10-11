@@ -41,7 +41,7 @@ func TestNewCounterMetric(t *testing.T) {
 				t.Fatal("NewCounterMetric() succeeded unexpectedly")
 			}
 
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -79,7 +79,7 @@ func TestNewGaugeMetric(t *testing.T) {
 				t.Fatal("NewGaugeMetric() succeeded unexpectedly")
 			}
 
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -152,7 +152,7 @@ func TestMetric_IncrementCounterValue(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("IncrementCounterValue() succeeded unexpectedly")
 			}
-			assert.Equal(t, tt.source.CounterValue, &tt.wantSum)
+			assert.Equal(t, tt.wantSum, *tt.source.CounterValue)
 		})
 	}
 }

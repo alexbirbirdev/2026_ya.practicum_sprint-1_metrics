@@ -24,27 +24,27 @@ func NewAgentUsecase(
 	}
 }
 
-func (u *AgentUsecase) CollectMetrics(keys db.MetricsKeys, values db.MetricsValues, interval time.Duration) {
+func (u *AgentUsecase) CollectMetrics(keys *db.MetricsKeys, values *db.MetricsValues, interval time.Duration) {
 	for {
 		for _, m := range keys.CounterMetricsKeys {
 			if m == "PollCount" {
-				values.CounterMetricsValues[m] += 1
+				values.IncCounter(m)
 			}
 		}
 		for _, m := range keys.GaugeMetricsKeys {
 			if m == "RandomValue" {
-				values.GaugeMetricsValues[m] = rand.Float64()
+				values.SetGauge(m, rand.Float64())
 			} else {
-				values.GaugeMetricsValues[m] = service.GetMetricValue(m)
+				values.SetGauge(m, service.GetMetricValue(m))
 			}
 		}
 		time.Sleep(interval)
 	}
 }
-func (u *AgentUsecase) SendMetrics(keys db.MetricsKeys, values db.MetricsValues, interval time.Duration) {
+func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValues, interval time.Duration) {
 	for {
 		for _, m := range keys.CounterMetricsKeys {
-			value := values.CounterMetricsValues[m]
+			value := values.Counter(m)
 			metricDTO := dto.MetricDTO{
 				Name:         m,
 				Type:         vo.CounterMetricType.String(),
@@ -56,7 +56,7 @@ func (u *AgentUsecase) SendMetrics(keys db.MetricsKeys, values db.MetricsValues,
 			}
 		}
 		for _, m := range keys.GaugeMetricsKeys {
-			value := values.GaugeMetricsValues[m]
+			value := values.Gauge(m)
 			metricDTO := dto.MetricDTO{
 				Name:       m,
 				Type:       vo.GaugeMetricType.String(),
@@ -67,6 +67,7 @@ func (u *AgentUsecase) SendMetrics(keys db.MetricsKeys, values db.MetricsValues,
 				break
 			}
 		}
+		values.SetCounter("PollCount", 0)
 		time.Sleep(interval)
 	}
 }

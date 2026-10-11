@@ -7,32 +7,27 @@ import (
 
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/dto"
 	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
+	repomocks "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric/mocks"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"
-	mocks "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/interfaces/mocks"
 	vo "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object"
+	appErrors "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
 	httplib "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/agent"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
 	"github.com/go-openapi/testify/v2/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestHandler_SendMetric(t *testing.T) {
-	metricsRepository := &mocks.MockMetricsRepository{
-		ListMetricsFn: func() ([]entity.Metric, error) {
-			counter := int64(42)
-			return []entity.Metric{
-				{
-					Name:         "requests",
-					Type:         vo.CounterMetricType.String(),
-					CounterValue: &counter,
-				},
-			}, nil
-		},
-	}
+	repo := repomocks.NewMockMetricsRepository(t)
+	repo.On("FindMetricByNameAndType", mock.Anything, mock.Anything).
+		Return(entity.Metric{}, appErrors.ErrNotFound)
+	repo.On("CreateMetric", mock.Anything).Return(nil)
+	repo.On("UpdateMetric", mock.Anything).Return(nil).Maybe()
 
-	metricsUsecases := usecase.NewMetricUsecases(metricsRepository)
+	metricsUsecases := usecase.NewMetricUsecases(repo)
 
-	metricsHandlers := metricHandlers.NewMetricHandler(*metricsUsecases)
+	metricsHandlers := metricHandlers.NewMetricHandler(metricsUsecases)
 
 	handlers := httplib.HTTPHandlers{
 		Metrics: metricsHandlers,

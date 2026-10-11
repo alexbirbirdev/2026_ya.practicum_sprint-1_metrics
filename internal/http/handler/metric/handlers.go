@@ -1,22 +1,30 @@
 package metric
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/dto"
-	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
 	vo "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object"
-	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
+	appErrors "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
 	"github.com/go-chi/chi/v5"
 )
 
+type MetricUsecase interface {
+	IncrementCounter(in dto.MetricDTO) error
+	UpdateGauge(in dto.MetricDTO) error
+	GetAllMetrics() ([]dto.MetricDTO, error)
+	GetMetricByNameAndType(metricName string, metricType vo.MetricType) (dto.MetricDTO, error)
+}
+
 type MetricHandlers struct {
-	metricsUsecases usecase.MetricUsecases
+	metricsUsecases MetricUsecase
 }
 
 func NewMetricHandler(
-	metricsUsecases usecase.MetricUsecases,
+	metricsUsecases MetricUsecase,
 ) *MetricHandlers {
 	return &MetricHandlers{
 		metricsUsecases: metricsUsecases,
@@ -34,10 +42,11 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 
 	request, err := dto.NewMetric(metricType, metricName, metricValue)
 	if err != nil {
-		if err == errors.ErrNotFound {
+
+		if errors.Is(err, appErrors.ErrNotFound) {
 			http.Error(res, "Wrong Request", http.StatusNotFound)
 			return
-		} else if err == errors.ErrHTTPStatusBadRequest {
+		} else if errors.Is(err, appErrors.ErrHTTPStatusBadRequest) {
 			http.Error(res, "Bad Request", http.StatusBadRequest)
 			return
 		}
@@ -47,7 +56,8 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 	if request.IsCounter() {
 		err := h.metricsUsecases.IncrementCounter(*request)
 		if err != nil {
-			http.Error(res, "Server error", http.StatusInternalServerError)
+			log.Printf("increment counter: %v", err)
+			http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		res.WriteHeader(http.StatusOK)
@@ -55,7 +65,8 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 	}
 	err = h.metricsUsecases.UpdateGauge(*request)
 	if err != nil {
-		http.Error(res, "Server error", http.StatusInternalServerError)
+		log.Printf("update gauge: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	res.WriteHeader(http.StatusOK)
@@ -64,13 +75,15 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 func (h MetricHandlers) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
 	list, err := h.metricsUsecases.GetAllMetrics()
 	if err != nil {
-		http.Error(res, "server error", http.StatusInternalServerError)
+		log.Printf("list metrics: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	if err := metricsListHTML.ExecuteTemplate(res, "metric.html", list); err != nil {
-		http.Error(res, "server error", http.StatusInternalServerError)
+		log.Printf("render metrics page: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 }
@@ -85,11 +98,12 @@ func (h MetricHandlers) GetMetricByName(res http.ResponseWriter, req *http.Reque
 
 	metric, err := h.metricsUsecases.GetMetricByNameAndType(metricName, vo.MetricType(metricType))
 	if err != nil {
-		if err == errors.ErrNotFound {
+		if errors.Is(err, appErrors.ErrNotFound) {
 			http.Error(res, "no metric", http.StatusNotFound)
 			return
 		}
-		http.Error(res, "something wrong", http.StatusInternalServerError)
+		log.Printf("get metric by name and type: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	var value string

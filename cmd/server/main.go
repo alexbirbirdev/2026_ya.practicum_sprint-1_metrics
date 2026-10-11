@@ -1,9 +1,9 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"log"
 
+	config "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/config/server"
 	http "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 
 	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
@@ -14,19 +14,18 @@ import (
 
 func main() {
 
-	addr := flag.String("a", "localhost:8080", "адрес эндопинта HTTP сервера")
-	flag.Parse()
+	cfg := config.ParseServer()
 
 	inMemoryDB, err := models.NewInMemoryMetrics()
 	if err != nil {
-		panic(fmt.Errorf("fail to initialize DB"))
+		log.Fatalf("fail to initialize DB: %v", err)
 	}
 
 	metricsRepository := repository.NewMetricsRepository(inMemoryDB)
 
 	metricsUsecases := usecase.NewMetricUsecases(metricsRepository)
 
-	metricsHandlers := metricHandlers.NewMetricHandler(*metricsUsecases)
+	metricsHandlers := metricHandlers.NewMetricHandler(metricsUsecases)
 
 	handlers := http.HTTPHandlers{
 		Metrics: metricsHandlers,
@@ -34,5 +33,5 @@ func main() {
 
 	router := http.NewHTTPRouter(handlers)
 
-	http.NewHTTPServer(*addr, router)
+	http.NewHTTPServer(cfg.HTTP.Addr, router)
 }

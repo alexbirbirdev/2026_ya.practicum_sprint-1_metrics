@@ -1,5 +1,7 @@
 package agent
 
+import "sync"
+
 type MetricsKeys struct {
 	CounterMetricsKeys []string
 	GaugeMetricsKeys   []string
@@ -42,13 +44,43 @@ func NewMetricKeys() *MetricsKeys {
 }
 
 type MetricsValues struct {
-	CounterMetricsValues map[string]int64
-	GaugeMetricsValues   map[string]float64
+	mu                  sync.RWMutex
+	counterMetricValues map[string]int64
+	gaugeMetricValues   map[string]float64
 }
 
 func NewMetricsValues() *MetricsValues {
 	return &MetricsValues{
-		CounterMetricsValues: make(map[string]int64),
-		GaugeMetricsValues:   make(map[string]float64),
+		counterMetricValues: make(map[string]int64),
+		gaugeMetricValues:   make(map[string]float64),
 	}
+}
+
+func (v *MetricsValues) IncCounter(name string) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.counterMetricValues[name]++
+}
+func (v *MetricsValues) SetCounter(name string, value int64) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.counterMetricValues[name] = value
+}
+
+func (v *MetricsValues) SetGauge(name string, value float64) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.gaugeMetricValues[name] = value
+}
+
+func (v *MetricsValues) Counter(name string) int64 {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	return v.counterMetricValues[name]
+}
+
+func (v *MetricsValues) Gauge(name string) float64 {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	return v.gaugeMetricValues[name]
 }

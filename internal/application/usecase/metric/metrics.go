@@ -1,19 +1,20 @@
-package usecase
+package metric
 
 import (
+	"errors"
+
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/dto"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"
-	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/interfaces"
 	vo "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object"
-	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
+	appErrors "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
 )
 
 type MetricUsecases struct {
-	repo interfaces.MetricsRepository
+	repo MetricsRepository
 }
 
 func NewMetricUsecases(
-	repo interfaces.MetricsRepository,
+	repo MetricsRepository,
 ) *MetricUsecases {
 	return &MetricUsecases{
 		repo: repo,
@@ -27,7 +28,7 @@ func (u *MetricUsecases) IncrementCounter(in dto.MetricDTO) error {
 	}
 	existMetric, err := u.repo.FindMetricByNameAndType(metric.Name, vo.CounterMetricType)
 	if err != nil {
-		if err == errors.ErrNotFound {
+		if errors.Is(err, appErrors.ErrNotFound) {
 			err = u.repo.CreateMetric(*metric)
 			if err != nil {
 				return err
@@ -56,7 +57,7 @@ func (u *MetricUsecases) UpdateGauge(in dto.MetricDTO) error {
 	}
 	existMetric, err := u.repo.FindMetricByNameAndType(metric.Name, vo.MetricType(metric.Type))
 	if err != nil {
-		if err == errors.ErrNotFound {
+		if errors.Is(err, appErrors.ErrNotFound) {
 			err = u.repo.CreateMetric(*metric)
 			if err != nil {
 				return err
@@ -97,8 +98,8 @@ func (u *MetricUsecases) GetAllMetrics() ([]dto.MetricDTO, error) {
 func (u *MetricUsecases) GetMetricByNameAndType(metricName string, metricType vo.MetricType) (dto.MetricDTO, error) {
 	existMetric, err := u.repo.FindMetricByNameAndType(metricName, vo.MetricType(metricType))
 	if err != nil {
-		if err == errors.ErrNotFound {
-			return dto.MetricDTO{}, errors.ErrNotFound
+		if errors.Is(err, appErrors.ErrNotFound) {
+			return dto.MetricDTO{}, appErrors.ErrNotFound
 		}
 		return dto.MetricDTO{}, err
 	}

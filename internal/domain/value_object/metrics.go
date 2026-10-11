@@ -2,7 +2,7 @@ package valueobject
 
 type MetricType string
 
-var (
+const (
 	CounterMetricType MetricType = "counter"
 	GaugeMetricType   MetricType = "gauge"
 )

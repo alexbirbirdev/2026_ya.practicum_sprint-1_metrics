@@ -1,4 +1,4 @@
-package interfaces
+package metric
 
 import (
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/entity"

@@ -5,6 +5,7 @@ import (
 
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/dto"
 	vo "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object"
+	"github.com/go-openapi/testify/v2/assert"
 )
 
 func TestMetricDTO_Value(t *testing.T) {
@@ -47,9 +48,7 @@ func TestMetricDTO_Value(t *testing.T) {
 				t.Fatalf("could not construct receiver type: %v", err)
 			}
 			got := m.Value()
-			if got != tt.want {
-				t.Errorf("Value() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -92,8 +91,11 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter1",
 			metricName:  "test name",
 			metricValue: "1234523",
-			want:        &dto.MetricDTO{},
-			wantErr:     false,
+			want: &dto.MetricDTO{
+				Type: "counter1",
+				Name: "test name",
+			},
+			wantErr: false,
 		},
 		{
 			name:        "wrong counter value",
@@ -132,9 +134,7 @@ func TestNewMetric(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("NewMetric() succeeded unexpectedly")
 			}
-			if got == tt.want {
-				t.Errorf("NewMetric() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

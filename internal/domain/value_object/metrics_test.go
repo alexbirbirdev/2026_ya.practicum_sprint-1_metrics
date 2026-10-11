@@ -30,7 +30,7 @@ func TestMetricType_Validate(t *testing.T) {
 			m := valueobject.MetricType(tt.name)
 			got := m.Validate()
 
-			assert.Equal(t, got, tt.want)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
