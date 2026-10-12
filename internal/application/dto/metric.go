@@ -32,6 +32,10 @@ func (dto *MetricDTO) IsGauge() bool {
 }
 
 func NewMetric(metricType, metricName, metricValue string) (*MetricDTO, error) {
+	if !vo.MetricType(metricType).Validate() {
+		return &MetricDTO{}, errors.ErrHTTPStatusBadRequest
+	}
+
 	dto := &MetricDTO{
 		Type: metricType,
 		Name: metricName,

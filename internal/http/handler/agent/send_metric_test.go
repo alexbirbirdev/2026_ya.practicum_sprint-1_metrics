@@ -20,10 +20,10 @@ import (
 
 func TestHandler_SendMetric(t *testing.T) {
 	repo := repomocks.NewMockMetricsRepository(t)
-	repo.On("FindMetricByNameAndType", mock.Anything, mock.Anything).
+	repo.EXPECT().FindMetricByNameAndType(mock.Anything, mock.Anything).
 		Return(entity.Metric{}, appErrors.ErrNotFound)
-	repo.On("CreateMetric", mock.Anything).Return(nil)
-	repo.On("UpdateMetric", mock.Anything).Return(nil).Maybe()
+	repo.EXPECT().CreateMetric(mock.Anything).Return(nil)
+	repo.EXPECT().UpdateMetric(mock.Anything).Return(nil).Maybe()
 
 	metricsUsecases := usecase.NewMetricUsecases(repo)
 

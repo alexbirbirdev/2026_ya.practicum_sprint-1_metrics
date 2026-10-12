@@ -44,7 +44,7 @@ func NewMetricKeys() *MetricsKeys {
 }
 
 type MetricsValues struct {
-	mu                  sync.RWMutex
+	mu                  sync.Mutex
 	counterMetricValues map[string]int64
 	gaugeMetricValues   map[string]float64
 }
@@ -74,13 +74,13 @@ func (v *MetricsValues) SetGauge(name string, value float64) {
 }
 
 func (v *MetricsValues) Counter(name string) int64 {
-	v.mu.RLock()
-	defer v.mu.RUnlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 	return v.counterMetricValues[name]
 }
 
 func (v *MetricsValues) Gauge(name string) float64 {
-	v.mu.RLock()
-	defer v.mu.RUnlock()
+	v.mu.Lock()
+	defer v.mu.Unlock()
 	return v.gaugeMetricValues[name]
 }

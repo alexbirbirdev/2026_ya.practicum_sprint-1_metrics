@@ -91,11 +91,7 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter1",
 			metricName:  "test name",
 			metricValue: "1234523",
-			want: &dto.MetricDTO{
-				Type: "counter1",
-				Name: "test name",
-			},
-			wantErr: false,
+			wantErr:     true,
 		},
 		{
 			name:        "wrong counter value",

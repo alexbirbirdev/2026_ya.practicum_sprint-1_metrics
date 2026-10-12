@@ -43,6 +43,7 @@ func (u *AgentUsecase) CollectMetrics(keys *db.MetricsKeys, values *db.MetricsVa
 }
 func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValues, interval time.Duration) {
 	for {
+		countersSentOK := true
 		for _, m := range keys.CounterMetricsKeys {
 			value := values.Counter(m)
 			metricDTO := dto.MetricDTO{
@@ -52,9 +53,12 @@ func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValue
 			}
 			status, err := u.Handler.SendMetric(metricDTO)
 			if err != nil || status != http.StatusOK {
+				countersSentOK = false
 				break
 			}
 		}
+
+		gaugesSentOK := true
 		for _, m := range keys.GaugeMetricsKeys {
 			value := values.Gauge(m)
 			metricDTO := dto.MetricDTO{
@@ -64,10 +68,14 @@ func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValue
 			}
 			status, err := u.Handler.SendMetric(metricDTO)
 			if err != nil || status != http.StatusOK {
+				gaugesSentOK = false
 				break
 			}
 		}
-		values.SetCounter("PollCount", 0)
+
+		if countersSentOK && gaugesSentOK {
+			values.SetCounter("PollCount", 0)
+		}
 		time.Sleep(interval)
 	}
 }
