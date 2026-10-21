@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"flag"
 	"time"
 )
 
@@ -27,21 +26,14 @@ type Agent struct {
 	Reporter  Reporter
 }
 
-func ParseAgent() Agent {
-	addr := flag.String("a", "localhost:8080", "адрес эндопинта HTTP сервера")
-	reportSec := flag.Int("r", 10, "частота отправки метрик на сервер")
-	pollSec := flag.Int("p", 2, "частота опроса метрик")
-	flag.Parse()
+func GetConfig() Agent {
+	var emptyConfig Agent
+	cfg := parseByEnv()
 
-	return Agent{
-		HTTP: HTTPClient{
-			Addr: *addr,
-		},
-		Collector: Collector{
-			PollInterval: time.Duration(*pollSec) * time.Second,
-		},
-		Reporter: Reporter{
-			ReportInterval: time.Duration(*reportSec) * time.Second,
-		},
+	if cfg != emptyConfig {
+		return cfg
 	}
+
+	cfg = parseByFlag()
+	return cfg
 }
