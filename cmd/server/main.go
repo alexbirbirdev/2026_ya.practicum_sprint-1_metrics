@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-
-	cfg := config.ParseServer()
+	cfg := config.GetConfig()
 
 	inMemoryDB, err := models.NewInMemoryMetrics()
 	if err != nil {
