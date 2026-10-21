@@ -13,8 +13,6 @@ func parseByEnv() Server {
 		return Server{}
 	}
 	return Server{
-		HTTP: HTTPServer{
-			Addr: cfg.Addr,
-		},
+		HTTP: HTTPServer{cfg.Addr},
 	}
 }
