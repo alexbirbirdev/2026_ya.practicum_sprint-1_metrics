@@ -97,7 +97,6 @@ func (h MetricHandlers) UpdateMetric(res http.ResponseWriter, req *http.Request)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Printf("dto: %s", requestDTO)
 
 	if requestDTO.IsCounter() {
 		updatedMetric, err := h.metricsUsecases.IncrementCounter(requestDTO)
