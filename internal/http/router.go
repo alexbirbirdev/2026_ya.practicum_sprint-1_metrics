@@ -19,6 +19,7 @@ func NewHTTPRouter(cfg HTTPHandlers) *HTTPRouter {
 	r.Get("/", cfg.Metrics.GetAllMetrics)
 	r.Get("/value/{metricType}/{metricName}", cfg.Metrics.GetMetricByName)
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", cfg.Metrics.AcceptMetric)
+	r.Post("/update", cfg.Metrics.UpdateMetric)
 
 	return &HTTPRouter{Chi: r}
 }

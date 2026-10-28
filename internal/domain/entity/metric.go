@@ -12,18 +12,18 @@ type Metric struct {
 	GaugeValue   *float64
 }
 
-func (m *Metric) IncrementCounterValue(value *int64) error {
+func (m *Metric) IncrementCounterValue(value *int64) (*int64, error) {
 	if m.CounterValue != nil {
 		*m.CounterValue += *value
 	}
-	return nil
+	return m.CounterValue, nil
 }
 
-func (m *Metric) UpdateGaugeValue(value *float64) error {
+func (m *Metric) UpdateGaugeValue(value *float64) (*float64, error) {
 	if m.GaugeValue != nil {
 		*m.GaugeValue = *value
 	}
-	return nil
+	return m.GaugeValue, nil
 }
 
 func NewCounterMetric(
@@ -47,11 +47,11 @@ func NewGaugeMetric(
 	}, nil
 }
 
-func (m Metric) MapToDTO() dto.MetricDTO {
-	return dto.MetricDTO{
-		Type:         m.Type,
-		Name:         m.Name,
-		CounterValue: m.CounterValue,
-		GaugeValue:   m.GaugeValue,
+func (m Metric) MapToDTO() dto.Metrics {
+	return dto.Metrics{
+		MType: m.Type,
+		ID:    m.Name,
+		Delta: m.CounterValue,
+		Value: m.GaugeValue,
 	}
 }

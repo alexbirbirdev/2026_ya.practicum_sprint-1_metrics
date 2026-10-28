@@ -46,10 +46,10 @@ func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValue
 		countersSentOK := true
 		for _, m := range keys.CounterMetricsKeys {
 			value := values.Counter(m)
-			metricDTO := dto.MetricDTO{
-				Name:         m,
-				Type:         vo.CounterMetricType.String(),
-				CounterValue: &value,
+			metricDTO := dto.Metrics{
+				ID:    m,
+				MType: vo.CounterMetricType.String(),
+				Delta: &value,
 			}
 			status, err := u.Handler.SendMetric(metricDTO)
 			if err != nil || status != http.StatusOK {
@@ -61,10 +61,10 @@ func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValue
 		gaugesSentOK := true
 		for _, m := range keys.GaugeMetricsKeys {
 			value := values.Gauge(m)
-			metricDTO := dto.MetricDTO{
-				Name:       m,
-				Type:       vo.GaugeMetricType.String(),
-				GaugeValue: &value,
+			metricDTO := dto.Metrics{
+				ID:    m,
+				MType: vo.GaugeMetricType.String(),
+				Value: &value,
 			}
 			status, err := u.Handler.SendMetric(metricDTO)
 			if err != nil || status != http.StatusOK {
