@@ -41,11 +41,16 @@ func (u *AgentUsecase) CollectMetrics(keys *db.MetricsKeys, values *db.MetricsVa
 		time.Sleep(interval)
 	}
 }
+
 func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValues, interval time.Duration) {
 	for {
 		countersSentOK := true
+		var sentPollCount int64
 		for _, m := range keys.CounterMetricsKeys {
 			value := values.Counter(m)
+			if m == "PollCount" {
+				sentPollCount = value
+			}
 			metricDTO := dto.Metrics{
 				ID:    m,
 				MType: vo.CounterMetricType.String(),
@@ -74,8 +79,9 @@ func (u *AgentUsecase) SendMetrics(keys *db.MetricsKeys, values *db.MetricsValue
 		}
 
 		if countersSentOK && gaugesSentOK {
-			values.SetCounter("PollCount", 0)
+			values.SubCounter("PollCount", sentPollCount)
 		}
+
 		time.Sleep(interval)
 	}
 }
