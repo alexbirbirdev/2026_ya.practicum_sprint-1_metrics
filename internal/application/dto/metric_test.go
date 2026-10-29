@@ -47,7 +47,7 @@ func TestMetricDTO_Value(t *testing.T) {
 			if err != nil {
 				t.Fatalf("could not construct receiver type: %v", err)
 			}
-			got := m.Value()
+			got := m.GetValue()
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -59,7 +59,7 @@ func TestNewMetric(t *testing.T) {
 		metricType  string
 		metricName  string
 		metricValue string
-		want        *dto.MetricDTO
+		want        *dto.Metrics
 		wantErr     bool
 	}{
 		{
@@ -67,10 +67,10 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter",
 			metricName:  "test name",
 			metricValue: "1234523",
-			want: &dto.MetricDTO{
-				Type:         vo.CounterMetricType.String(),
-				Name:         "test name",
-				CounterValue: ptr(int64(1234523)),
+			want: &dto.Metrics{
+				MType: vo.CounterMetricType.String(),
+				ID:    "test name",
+				Delta: ptr(int64(1234523)),
 			},
 			wantErr: false,
 		},
@@ -79,10 +79,10 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "gauge",
 			metricName:  "test name",
 			metricValue: "1234523.34",
-			want: &dto.MetricDTO{
-				Type:       vo.GaugeMetricType.String(),
-				Name:       "test name",
-				GaugeValue: ptr(1234523.34),
+			want: &dto.Metrics{
+				MType: vo.GaugeMetricType.String(),
+				ID:    "test name",
+				Value: ptr(1234523.34),
 			},
 			wantErr: false,
 		},
@@ -98,7 +98,7 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter",
 			metricName:  "test name",
 			metricValue: "123.123",
-			want:        &dto.MetricDTO{},
+			want:        &dto.Metrics{},
 			wantErr:     true,
 		},
 		{
@@ -106,7 +106,7 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter",
 			metricName:  "test name",
 			metricValue: "msekmde",
-			want:        &dto.MetricDTO{},
+			want:        &dto.Metrics{},
 			wantErr:     true,
 		},
 		{
@@ -114,7 +114,7 @@ func TestNewMetric(t *testing.T) {
 			metricType:  "counter",
 			metricName:  "test name",
 			metricValue: "",
-			want:        &dto.MetricDTO{},
+			want:        &dto.Metrics{},
 			wantErr:     true,
 		},
 	}
@@ -142,24 +142,24 @@ func ptr[T any](v T) *T {
 func TestMetricDTO_IsCounter(t *testing.T) {
 	tests := []struct {
 		name   string
-		metric dto.MetricDTO
+		metric dto.Metrics
 		want   bool
 	}{
 		{
 			name: "true",
-			metric: dto.MetricDTO{
-				Type:         vo.CounterMetricType.String(),
-				Name:         "random",
-				CounterValue: ptr(int64(1231)),
+			metric: dto.Metrics{
+				MType: vo.CounterMetricType.String(),
+				ID:    "random",
+				Delta: ptr(int64(1231)),
 			},
 			want: true,
 		},
 		{
 			name: "false",
-			metric: dto.MetricDTO{
-				Type:         vo.GaugeMetricType.String(),
-				Name:         "random",
-				CounterValue: ptr(int64(1231)),
+			metric: dto.Metrics{
+				MType: vo.GaugeMetricType.String(),
+				ID:    "random",
+				Value: ptr(float64(1231)),
 			},
 			want: false,
 		},
@@ -177,24 +177,24 @@ func TestMetricDTO_IsCounter(t *testing.T) {
 func TestMetricDTO_IsGauge(t *testing.T) {
 	tests := []struct {
 		name   string
-		metric dto.MetricDTO
+		metric dto.Metrics
 		want   bool
 	}{
 		{
 			name: "false",
-			metric: dto.MetricDTO{
-				Type:         vo.CounterMetricType.String(),
-				Name:         "random",
-				CounterValue: ptr(int64(1231)),
+			metric: dto.Metrics{
+				MType: vo.CounterMetricType.String(),
+				ID:    "random",
+				Delta: ptr(int64(1231)),
 			},
 			want: false,
 		},
 		{
 			name: "false",
-			metric: dto.MetricDTO{
-				Type:         vo.GaugeMetricType.String(),
-				Name:         "random",
-				CounterValue: ptr(int64(1231)),
+			metric: dto.Metrics{
+				MType: vo.GaugeMetricType.String(),
+				ID:    "random",
+				Delta: ptr(int64(1231)),
 			},
 			want: true,
 		},
