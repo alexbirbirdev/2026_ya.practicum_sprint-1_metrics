@@ -110,7 +110,7 @@ func (h MetricHandlers) UpdateMetric(res http.ResponseWriter, req *http.Request)
 			res.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		res.Header().Add("Content-type", "application/json")
+		res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
 		res.WriteHeader(http.StatusOK)
 		res.Write(out)
 		return
@@ -126,7 +126,7 @@ func (h MetricHandlers) UpdateMetric(res http.ResponseWriter, req *http.Request)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	res.Header().Add("Content-type", "application/json")
+	res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
 	res.WriteHeader(http.StatusOK)
 	res.Write(out)
 }
@@ -178,4 +178,48 @@ func (h MetricHandlers) GetMetricByName(res http.ResponseWriter, req *http.Reque
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(value))
+}
+
+func (h MetricHandlers) GetMetricValue(res http.ResponseWriter, req *http.Request) {
+	if req.Header.Get("Content-Type") != vo.ContentTypeApplicationJSON {
+		log.Printf("wrong content-type")
+		http.Error(res, "wrong content-type", http.StatusBadRequest)
+		return
+	}
+	var requestDTO dto.Metrics
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(req.Body)
+	if err != nil {
+		log.Printf("error read body")
+		http.Error(res, "failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	if err := json.Unmarshal(buf.Bytes(), &requestDTO); err != nil {
+		http.Error(res, "failed to unmarshal", http.StatusBadRequest)
+		return
+	}
+	if !vo.MetricType(requestDTO.MType).Validate() {
+		http.Error(res, "wrong metric type", http.StatusBadRequest)
+		return
+	}
+	metric, err := h.metricsUsecases.GetMetricByNameAndType(requestDTO.ID, vo.MetricType(requestDTO.MType))
+	if err != nil {
+		if errors.Is(err, appErrors.ErrNotFound) {
+			http.Error(res, "no metric", http.StatusNotFound)
+			return
+		}
+		log.Printf("get metric by name and type: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	out, err := json.Marshal(metric)
+	if err != nil {
+		http.Error(res, "failed to marshal", http.StatusInternalServerError)
+		return
+	}
+	res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
+	res.WriteHeader(http.StatusOK)
+	res.Write(out)
 }
