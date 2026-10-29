@@ -26,7 +26,7 @@ func NewHandler(baseURL string) *Handler {
 }
 
 func (h Handler) SendMetric(in dto.Metrics) (int, error) {
-	url := fmt.Sprintf("%s/update", h.baseURL)
+	url := fmt.Sprintf("%s/update/", h.baseURL)
 
 	resp, err := h.client.R().
 		SetHeader("Content-Type", vo.ContentTypeApplicationJSON).
