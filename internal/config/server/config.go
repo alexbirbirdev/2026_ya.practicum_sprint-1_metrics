@@ -9,13 +9,7 @@ type Server struct {
 }
 
 func GetConfig() Server {
-	var emptyConfig Server
-	cfg := parseByEnv()
-
-	if cfg != emptyConfig {
-		return cfg
-	}
-
-	cfg = parseByFlag()
+	cfg := parseByFlag()
+	applyEnv(&cfg)
 	return cfg
 }

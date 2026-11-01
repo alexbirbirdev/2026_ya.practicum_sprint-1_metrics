@@ -12,21 +12,20 @@ type envConfig struct {
 	ReportInterval int    `env:"REPORT_INTERVAL,required"`
 }
 
-func parseByEnv() Agent {
-	var cfg envConfig
-	err := env.Parse(&cfg)
+func applyEnv(cfg *Agent) {
+	var e envConfig
+	err := env.Parse(&e)
 	if err != nil {
-		return Agent{}
+		return
 	}
-	return Agent{
-		HTTP: HTTPClient{
-			Addr: cfg.Addr,
-		},
-		Collector: Collector{
-			PollInterval: time.Duration(cfg.PollInterval) * time.Second,
-		},
-		Reporter: Reporter{
-			ReportInterval: time.Duration(cfg.ReportInterval) * time.Second,
-		},
+
+	if e.Addr != "" {
+		cfg.HTTP.Addr = e.Addr
+	}
+	if e.PollInterval > 0 {
+		cfg.Collector.PollInterval = time.Duration(e.PollInterval) * time.Second
+	}
+	if e.ReportInterval > 0 {
+		cfg.Reporter.ReportInterval = time.Duration(e.ReportInterval) * time.Second
 	}
 }

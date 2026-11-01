@@ -27,13 +27,7 @@ type Agent struct {
 }
 
 func GetConfig() Agent {
-	var emptyConfig Agent
-	cfg := parseByEnv()
-
-	if cfg != emptyConfig {
-		return cfg
-	}
-
-	cfg = parseByFlag()
+	cfg := parseByFlag()
+	applyEnv(&cfg)
 	return cfg
 }

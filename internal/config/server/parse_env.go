@@ -6,13 +6,13 @@ type envConfig struct {
 	Addr string `env:"ADDRESS,required"`
 }
 
-func parseByEnv() Server {
-	var cfg envConfig
-	err := env.Parse(&cfg)
+func applyEnv(cfg *Server) {
+	var e envConfig
+	err := env.Parse(&e)
 	if err != nil {
-		return Server{}
+		return
 	}
-	return Server{
-		HTTP: HTTPServer(cfg),
+	if e.Addr != "" {
+		cfg.HTTP.Addr = e.Addr
 	}
 }
