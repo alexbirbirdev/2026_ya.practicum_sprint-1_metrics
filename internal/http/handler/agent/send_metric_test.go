@@ -14,6 +14,7 @@ import (
 	httplib "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/agent"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/middleware/compress"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -34,7 +35,8 @@ func TestHandler_SendMetric(t *testing.T) {
 	}
 
 	router := httplib.NewHTTPRouter(handlers)
-	ts := httptest.NewServer(router.Chi)
+	routerWithCompression := compress.WithCompression(router.Chi)
+	ts := httptest.NewServer(routerWithCompression)
 	defer ts.Close()
 
 	tests := []struct {

@@ -1,6 +1,9 @@
 package agent
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -28,9 +31,23 @@ func NewHandler(baseURL string) *Handler {
 func (h Handler) SendMetric(in dto.Metrics) (int, error) {
 	url := fmt.Sprintf("%s/update/", h.baseURL)
 
+	body, err := json.Marshal(in)
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
+	if _, err := gzipWriter.Write(body); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	if err := gzipWriter.Close(); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
 	resp, err := h.client.R().
 		SetHeader("Content-Type", vo.ContentTypeApplicationJSON).
-		SetBody(in).
+		SetHeader("Content-Encoding", "gzip").
+		SetBody(buf.Bytes()).
 		Post(url)
 	if err != nil {
 		return http.StatusBadRequest, err
