@@ -5,6 +5,7 @@ import (
 
 	config "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/config/server"
 	http "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/logger"
 
 	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
@@ -13,8 +14,9 @@ import (
 )
 
 func main() {
+	cfg := config.GetConfig()
 
-	cfg := config.ParseServer()
+	logger.InitAppLogger("info")
 
 	inMemoryDB, err := models.NewInMemoryMetrics()
 	if err != nil {
