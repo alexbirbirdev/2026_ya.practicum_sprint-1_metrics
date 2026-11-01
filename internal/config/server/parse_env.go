@@ -3,7 +3,7 @@ package server
 import "github.com/caarlos0/env/v6"
 
 type envConfig struct {
-	Addr string `env:"ADDRESS,required"`
+	Addr string `env:"ADDRESS"`
 }
 
 func applyEnv(cfg *Server) {

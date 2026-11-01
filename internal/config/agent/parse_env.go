@@ -7,9 +7,9 @@ import (
 )
 
 type envConfig struct {
-	Addr           string `env:"ADDRESS,required"`
-	PollInterval   int    `env:"POLL_INTERVAL,required"`
-	ReportInterval int    `env:"REPORT_INTERVAL,required"`
+	Addr           string `env:"ADDRESS"`
+	PollInterval   int    `env:"POLL_INTERVAL"`
+	ReportInterval int    `env:"REPORT_INTERVAL"`
 }
 
 func applyEnv(cfg *Agent) {
