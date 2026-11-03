@@ -73,7 +73,7 @@ func (u *MetricUsecases) UpdateGauge(in dto.Metrics) (dto.Metrics, error) {
 			}
 			return dto.Metrics{
 				ID:    metric.Name,
-				MType: vo.CounterMetricType.String(),
+				MType: vo.GaugeMetricType.String(),
 				Value: metric.GaugeValue,
 			}, nil
 		}
