@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	cfg := config.ParseAgent()
+	cfg := config.GetConfig()
+
 	metricKeys := db.NewMetricKeys()
 	metricValues := db.NewMetricsValues()
 
