@@ -11,10 +11,14 @@ type FileStorage struct {
 	FileStoragePath string
 	Restore         bool
 }
+type DB struct {
+	DSN string
+}
 
 type Server struct {
 	HTTP        HTTPServer
 	FileStorage FileStorage
+	DB          DB
 }
 
 func GetConfig() Server {

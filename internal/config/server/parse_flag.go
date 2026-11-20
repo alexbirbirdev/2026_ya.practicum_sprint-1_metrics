@@ -12,6 +12,7 @@ func parseByFlag() Server {
 	storeInterval := flag.Int("i", 300, "интервал сохранения метрик на диск (сек); 0 — синхронно")
 	fileStoragePath := flag.String("f", defaultStorageFilePath, "путь к файлу хранилища")
 	restore := flag.Bool("r", false, "загружать метрики из файла при старте")
+	dsn := flag.String("d", "", "DSN для подключения к базе данных")
 	flag.Parse()
 
 	return Server{
@@ -21,5 +22,6 @@ func parseByFlag() Server {
 			FileStoragePath: *fileStoragePath,
 			Restore:         *restore,
 		},
+		DB: DB{DSN: *dsn},
 	}
 }

@@ -13,6 +13,7 @@ type envConfig struct {
 	StoreInterval   int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
+	DSN             string `env:"DATABASE_DSN"`
 }
 
 func applyEnv(cfg *Server) {
@@ -34,6 +35,9 @@ func applyEnv(cfg *Server) {
 	}
 	if _, ok := os.LookupEnv("RESTORE"); ok {
 		cfg.FileStorage.Restore = parseBool(os.Getenv("RESTORE"))
+	}
+	if _, ok := os.LookupEnv("DATABASE_DSN"); ok && e.DSN != "" {
+		cfg.DB.DSN = e.DSN
 	}
 }
 
