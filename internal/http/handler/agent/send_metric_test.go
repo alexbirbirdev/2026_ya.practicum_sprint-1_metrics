@@ -14,8 +14,11 @@ import (
 	httplib "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/agent"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	serverHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/server"
+	servermocks "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/server/mocks"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/middleware/compress"
 	"github.com/go-openapi/testify/v2/assert"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -28,10 +31,18 @@ func TestHandler_SendMetric(t *testing.T) {
 
 	metricsUsecases := usecase.NewMetricUsecases(repo)
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := servermocks.NewMockServerUsecase(ctrl)
+	m.EXPECT().Ping().Return(nil).AnyTimes()
+
 	metricsHandlers := metricHandlers.NewMetricHandler(metricsUsecases)
+	serverHandlers := serverHandlers.NewServerHandler(m)
 
 	handlers := httplib.HTTPHandlers{
 		Metrics: metricsHandlers,
+		Server:  serverHandlers,
 	}
 
 	router := httplib.NewHTTPRouter(handlers)
