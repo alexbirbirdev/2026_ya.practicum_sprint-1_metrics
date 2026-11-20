@@ -13,8 +13,11 @@ import (
 	appErrors "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/domain/value_object/errors"
 	httplib "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	serverHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/server"
+	servermocks "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/server/mocks"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/go-openapi/testify/v2/require"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -35,10 +38,18 @@ func TestHTTPRouter(t *testing.T) {
 
 	metricsUsecases := usecase.NewMetricUsecases(repo)
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := servermocks.NewMockServerUsecase(ctrl)
+	m.EXPECT().Ping().Return(nil).AnyTimes()
+
 	metricsHandlers := metricHandlers.NewMetricHandler(metricsUsecases)
+	serverHandlers := serverHandlers.NewServerHandler(m)
 
 	handlers := httplib.HTTPHandlers{
 		Metrics: metricsHandlers,
+		Server:  serverHandlers,
 	}
 
 	router := httplib.NewHTTPRouter(handlers)
@@ -171,4 +182,48 @@ func TestHTTPRouter(t *testing.T) {
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func TestHTTPRouter_Ping(t *testing.T) {
+	tests := []struct {
+		name       string
+		pingErr    error
+		wantStatus int
+	}{
+		{
+			name:       "db ok",
+			pingErr:    nil,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "db down",
+			pingErr:    appErrors.ErrDatabaseConnection,
+			wantStatus: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serverUC := servermocks.NewMockServerUsecase(ctrl)
+			serverUC.EXPECT().Ping().Return(tt.pingErr).Times(1)
+
+			repo := repomocks.NewMockMetricsRepository(t)
+			repo.EXPECT().ListMetrics().Return(nil, nil).Maybe()
+			metricsUC := usecase.NewMetricUsecases(repo)
+
+			router := httplib.NewHTTPRouter(httplib.HTTPHandlers{
+				Metrics: metricHandlers.NewMetricHandler(metricsUC),
+				Server:  serverHandlers.NewServerHandler(serverUC),
+			})
+
+			req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+			w := httptest.NewRecorder()
+			router.Chi.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.wantStatus, w.Code)
+		})
+	}
 }
