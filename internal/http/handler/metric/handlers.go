@@ -1,6 +1,8 @@
 package metric
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -13,10 +15,10 @@ import (
 )
 
 type MetricUsecase interface {
-	IncrementCounter(in dto.MetricDTO) error
-	UpdateGauge(in dto.MetricDTO) error
-	GetAllMetrics() ([]dto.MetricDTO, error)
-	GetMetricByNameAndType(metricName string, metricType vo.MetricType) (dto.MetricDTO, error)
+	IncrementCounter(in dto.Metrics) (dto.Metrics, error)
+	UpdateGauge(in dto.Metrics) (dto.Metrics, error)
+	GetAllMetrics() ([]dto.Metrics, error)
+	GetMetricByNameAndType(metricName string, metricType vo.MetricType) (dto.Metrics, error)
 }
 
 type MetricHandlers struct {
@@ -54,7 +56,7 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 		return
 	}
 	if request.IsCounter() {
-		err := h.metricsUsecases.IncrementCounter(*request)
+		_, err := h.metricsUsecases.IncrementCounter(*request)
 		if err != nil {
 			log.Printf("increment counter: %v", err)
 			http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -63,13 +65,70 @@ func (h MetricHandlers) AcceptMetric(res http.ResponseWriter, req *http.Request)
 		res.WriteHeader(http.StatusOK)
 		return
 	}
-	err = h.metricsUsecases.UpdateGauge(*request)
+	_, err = h.metricsUsecases.UpdateGauge(*request)
 	if err != nil {
 		log.Printf("update gauge: %v", err)
 		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	res.WriteHeader(http.StatusOK)
+}
+
+func (h MetricHandlers) UpdateMetric(res http.ResponseWriter, req *http.Request) {
+	if req.Header.Get("Content-Type") != vo.ContentTypeApplicationJSON {
+		log.Printf("wrong content-type")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var requestDTO dto.Metrics
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(req.Body)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := json.Unmarshal(buf.Bytes(), &requestDTO); err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if err := requestDTO.Validate(); err != nil {
+		log.Printf("validation error: %v", err)
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if requestDTO.IsCounter() {
+		updatedMetric, err := h.metricsUsecases.IncrementCounter(requestDTO)
+		if err != nil {
+			log.Printf("increment counter: %v", err)
+			http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		out, err := json.Marshal(updatedMetric)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
+		res.WriteHeader(http.StatusOK)
+		res.Write(out)
+		return
+	}
+	updatedMetric, err := h.metricsUsecases.UpdateGauge(requestDTO)
+	if err != nil {
+		log.Printf("update gauge: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	out, err := json.Marshal(updatedMetric)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
+	res.WriteHeader(http.StatusOK)
+	res.Write(out)
 }
 
 func (h MetricHandlers) GetAllMetrics(res http.ResponseWriter, req *http.Request) {
@@ -108,10 +167,10 @@ func (h MetricHandlers) GetMetricByName(res http.ResponseWriter, req *http.Reque
 	}
 	var value string
 	switch {
-	case metric.CounterValue != nil:
-		value = fmt.Sprintf("%d", *metric.CounterValue)
-	case metric.GaugeValue != nil:
-		value = fmt.Sprintf("%g", *metric.GaugeValue)
+	case metric.Delta != nil:
+		value = fmt.Sprintf("%d", *metric.Delta)
+	case metric.Value != nil:
+		value = fmt.Sprintf("%g", *metric.Value)
 	default:
 		http.Error(res, "no value", http.StatusNotFound)
 		return
@@ -119,4 +178,48 @@ func (h MetricHandlers) GetMetricByName(res http.ResponseWriter, req *http.Reque
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(value))
+}
+
+func (h MetricHandlers) GetMetricValue(res http.ResponseWriter, req *http.Request) {
+	if req.Header.Get("Content-Type") != vo.ContentTypeApplicationJSON {
+		log.Printf("wrong content-type")
+		http.Error(res, "wrong content-type", http.StatusBadRequest)
+		return
+	}
+	var requestDTO dto.Metrics
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(req.Body)
+	if err != nil {
+		log.Printf("error read body")
+		http.Error(res, "failed to read body", http.StatusBadRequest)
+		return
+	}
+
+	if err := json.Unmarshal(buf.Bytes(), &requestDTO); err != nil {
+		http.Error(res, "failed to unmarshal", http.StatusBadRequest)
+		return
+	}
+	if !vo.MetricType(requestDTO.MType).Validate() {
+		http.Error(res, "wrong metric type", http.StatusBadRequest)
+		return
+	}
+	metric, err := h.metricsUsecases.GetMetricByNameAndType(requestDTO.ID, vo.MetricType(requestDTO.MType))
+	if err != nil {
+		if errors.Is(err, appErrors.ErrNotFound) {
+			http.Error(res, "no metric", http.StatusNotFound)
+			return
+		}
+		log.Printf("get metric by name and type: %v", err)
+		http.Error(res, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	out, err := json.Marshal(metric)
+	if err != nil {
+		http.Error(res, "failed to marshal", http.StatusInternalServerError)
+		return
+	}
+	res.Header().Add("Content-type", vo.ContentTypeApplicationJSON)
+	res.WriteHeader(http.StatusOK)
+	res.Write(out)
 }

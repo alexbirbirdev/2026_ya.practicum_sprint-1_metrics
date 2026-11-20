@@ -61,10 +61,11 @@ func (v *MetricsValues) IncCounter(name string) {
 	defer v.mu.Unlock()
 	v.counterMetricValues[name]++
 }
-func (v *MetricsValues) SetCounter(name string, value int64) {
+
+func (v *MetricsValues) SubCounter(name string, delta int64) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	v.counterMetricValues[name] = value
+	v.counterMetricValues[name] -= delta
 }
 
 func (v *MetricsValues) SetGauge(name string, value float64) {

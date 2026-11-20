@@ -1,20 +1,24 @@
 package server
 
-import "flag"
+import "time"
 
 type HTTPServer struct {
 	Addr string
 }
 
-type Server struct {
-	HTTP HTTPServer
+type FileStorage struct {
+	StoreInterval   time.Duration
+	FileStoragePath string
+	Restore         bool
 }
 
-func ParseServer() Server {
-	addr := flag.String("a", "localhost:8080", "адрес эндопинта HTTP сервера")
-	flag.Parse()
+type Server struct {
+	HTTP        HTTPServer
+	FileStorage FileStorage
+}
 
-	return Server{
-		HTTP: HTTPServer{Addr: *addr},
-	}
+func GetConfig() Server {
+	cfg := parseByFlag()
+	applyEnv(&cfg)
+	return cfg
 }

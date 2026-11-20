@@ -14,6 +14,7 @@ import (
 	httplib "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/agent"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/middleware/compress"
 	"github.com/go-openapi/testify/v2/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -34,71 +35,72 @@ func TestHandler_SendMetric(t *testing.T) {
 	}
 
 	router := httplib.NewHTTPRouter(handlers)
-	ts := httptest.NewServer(router.Chi)
+	routerWithCompression := compress.WithCompression(router.Chi)
+	ts := httptest.NewServer(routerWithCompression)
 	defer ts.Close()
 
 	tests := []struct {
-		in      dto.MetricDTO
+		in      dto.Metrics
 		want    int
 		wantErr bool
 	}{
 		{
-			in: dto.MetricDTO{
-				Type:         vo.CounterMetricType.String(),
-				Name:         "test",
-				CounterValue: ptr(int64(123)),
+			in: dto.Metrics{
+				MType: vo.CounterMetricType.String(),
+				ID:    "test",
+				Delta: ptr(int64(123)),
 			},
 			want:    http.StatusOK,
 			wantErr: false,
 		},
 		{
-			in: dto.MetricDTO{
-				Type:       vo.GaugeMetricType.String(),
-				Name:       "test",
-				GaugeValue: ptr(float64(123)),
+			in: dto.Metrics{
+				MType: vo.GaugeMetricType.String(),
+				ID:    "test",
+				Value: ptr(float64(123)),
 			},
 			want:    http.StatusOK,
 			wantErr: false,
 		},
 		{
-			in: dto.MetricDTO{
-				Type:       vo.GaugeMetricType.String(),
-				Name:       "test",
-				GaugeValue: ptr(float64(123.123)),
+			in: dto.Metrics{
+				MType: vo.GaugeMetricType.String(),
+				ID:    "test",
+				Value: ptr(float64(123.123)),
 			},
 			want:    http.StatusOK,
 			wantErr: false,
 		},
 		{
-			in: dto.MetricDTO{
-				Type:       "anoter",
-				Name:       "test123",
-				GaugeValue: ptr(float64(123)),
+			in: dto.Metrics{
+				MType: "anoter",
+				ID:    "test123",
+				Value: ptr(float64(123)),
 			},
 			want:    http.StatusBadRequest,
 			wantErr: false,
 		},
 		{
-			in: dto.MetricDTO{
-				Type:       "anoter sdfsd f sdf ",
-				Name:       "test123",
-				GaugeValue: ptr(float64(123)),
+			in: dto.Metrics{
+				MType: "anoter sdfsd f sdf ",
+				ID:    "test123",
+				Value: ptr(float64(123)),
 			},
 			want:    http.StatusBadRequest,
 			wantErr: false,
 		},
 		{
-			in: dto.MetricDTO{
-				Type:       " ",
-				Name:       " ",
-				GaugeValue: ptr(float64(123)),
+			in: dto.Metrics{
+				MType: " ",
+				ID:    " ",
+				Value: ptr(float64(123)),
 			},
 			want:    http.StatusBadRequest,
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.in.Name, func(t *testing.T) {
+		t.Run(tt.in.ID, func(t *testing.T) {
 			h := agent.NewHandler(ts.URL)
 			got, gotErr := h.SendMetric(tt.in)
 			if gotErr != nil {

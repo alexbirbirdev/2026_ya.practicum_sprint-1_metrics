@@ -142,7 +142,7 @@ func TestMetric_IncrementCounterValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotErr := tt.source.IncrementCounterValue(tt.value)
+			_, gotErr := tt.source.IncrementCounterValue(tt.value)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("IncrementCounterValue() failed: %v", gotErr)
@@ -179,7 +179,7 @@ func TestMetric_UpdateGaugeValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr := tt.source.UpdateGaugeValue(tt.value)
+			_, gotErr := tt.source.UpdateGaugeValue(tt.value)
 			if gotErr != nil {
 				if !tt.wantErr {
 					t.Errorf("UpdateGaugeValue() failed: %v", gotErr)
