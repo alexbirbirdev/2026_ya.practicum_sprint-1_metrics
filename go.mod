@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/lib/pq v1.12.3 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect

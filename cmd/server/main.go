@@ -1,14 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"log"
+
+	_ "github.com/lib/pq"
 
 	config "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/config/server"
 	http "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/logger"
 
 	usecase "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/metric"
+	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/application/usecase/server"
 	metricHandlers "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/metric"
+	serverHandler "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/http/handler/server"
 	filestorage "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/file_storage"
 	models "github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/inmemory/models/metric"
 	"github.com/alexbirbirdev/2026_ya.practicum_sprint-1_metrics/internal/infrastructure/db/inmemory/repository"
@@ -18,6 +23,12 @@ func main() {
 	cfg := config.GetConfig()
 
 	logger.InitAppLogger("info")
+
+	db, err := sql.Open("postgres", cfg.DB.DSN)
+	if err != nil {
+		log.Fatalf("failed to connect to DB: %v", err)
+	}
+	defer db.Close()
 
 	inMemoryDB, err := models.NewInMemoryMetrics()
 	if err != nil {
@@ -49,11 +60,14 @@ func main() {
 	metricsRepository.RunPeriodicMetricsSaving()
 
 	metricsUsecases := usecase.NewMetricUsecases(metricsRepository)
+	serverUsecases := server.NewServerUsecase(db)
 
 	metricsHandlers := metricHandlers.NewMetricHandler(metricsUsecases)
+	serverHandlers := serverHandler.NewServerHandler(serverUsecases)
 
 	handlers := http.HTTPHandlers{
 		Metrics: metricsHandlers,
+		Server:  serverHandlers,
 	}
 
 	router := http.NewHTTPRouter(handlers)
